@@ -75,7 +75,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     private DcMotor rightFrontDrive = null;
     private DcMotor rightBackDrive = null;
     private DcMotor lift = null;
-    private Servo flipper = null;
+    private DcMotor intake = null;
 
     @Override
     public void runOpMode() {
@@ -87,7 +87,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
         rightBackDrive = hardwareMap.get(DcMotor.class, "right_back_drive");
         lift = hardwareMap.get(DcMotor.class, "lift");
-        flipper = hardwareMap.get(Servo.class, "flipper");
+        intake = hardwareMap.get(DcMotor.class, "intake");
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -114,8 +114,23 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
+
+        int liftPos = 0;
+        lift.setTargetPosition(liftPos);
+        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift.setPower(1);
+
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+
+            lift.setTargetPosition(liftPos);
+
+            if (gamepad1.left_bumper) {
+                liftPos = 0;
+            } else if (gamepad1.right_bumper) {
+                liftPos = 100;
+            }
+
             double max;
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
@@ -129,10 +144,6 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             double rightFrontPower = axial - lateral - yaw;
             double leftBackPower   = axial - lateral + yaw;
             double rightBackPower  = axial + lateral - yaw;
-            int liftPos = 1000;
-            lift.setTargetPosition(liftPos);
-            lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            lift.setPower(1);
             //yay motor stuff wohoooo
 
             // Normalize the values so no wheel power exceeds 100%
@@ -148,10 +159,12 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
                 rightBackPower  /= max;
             }
 
-            if (gamepad1.a) {
-                flipper.setPosition(0);
+            if (gamepad1.b) {
+                intake.setPower(1);
+            } else if (gamepad1.y) {
+                intake.setPower(-1);
             } else {
-                flipper.setPosition(1);
+                intake.setPower(0);
             }
 
             // This is test code:
